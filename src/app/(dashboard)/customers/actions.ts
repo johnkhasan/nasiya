@@ -4,11 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { logAudit } from "@/lib/db/audit";
 import {
+  countCustomers,
   createCustomer,
   deleteCustomer,
   updateCustomer,
 } from "@/lib/db/customers";
+import { getShopById } from "@/lib/db/shops";
 import { requireSession } from "@/lib/session";
+import { getCustomerLimit, PLAN_LABELS } from "@/lib/plans";
 import { phoneSchema } from "@/lib/validation";
 
 const customerSchema = z.object({
@@ -36,6 +39,16 @@ export async function createCustomerAction(
   const parsed = parseCustomerForm(formData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ma'lumotlarni tekshiring" };
+  }
+
+  const shop = await getShopById(shopId);
+  const limit = getCustomerLimit(shop?.plan ?? "trial");
+  const currentCount = await countCustomers(shopId);
+  if (currentCount >= limit) {
+    const planLabel = PLAN_LABELS[shop?.plan ?? "trial"] ?? "joriy";
+    return {
+      error: `"${planLabel}" tarifda mijozlar chegarasiga (${limit} ta) yetdingiz. Davom etish uchun tarifni oshiring.`,
+    };
   }
 
   const customer = await createCustomer(shopId, parsed.data);

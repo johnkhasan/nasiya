@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { countCustomers } from "@/lib/db/customers";
 import { getDashboardStats } from "@/lib/db/dashboard";
 import { getShopById } from "@/lib/db/shops";
 import { formatMoney } from "@/lib/format";
+import { getCustomerLimit, PLAN_LABELS } from "@/lib/plans";
 import {
   Card,
   CardContent,
@@ -16,9 +19,16 @@ export default async function DashboardPage() {
   const session = await auth();
   const shopId = session?.user.shopId;
 
-  const [shop, stats] = shopId
-    ? await Promise.all([getShopById(shopId), getDashboardStats(shopId)])
-    : [null, null];
+  const [shop, stats, customerCount] = shopId
+    ? await Promise.all([
+        getShopById(shopId),
+        getDashboardStats(shopId),
+        countCustomers(shopId),
+      ])
+    : [null, null, 0];
+
+  const customerLimit = getCustomerLimit(shop?.plan ?? "trial");
+  const isNearLimit = customerCount / customerLimit >= 0.8;
 
   return (
     <div className="flex flex-col gap-4">
@@ -97,12 +107,27 @@ export default async function DashboardPage() {
         <CardHeader>
           <CardTitle>Tarif</CardTitle>
           <CardDescription>
-            {shop?.plan === "trial" ? "Sinov muddati" : shop?.plan}
+            {PLAN_LABELS[shop?.plan ?? "trial"] ?? shop?.plan}
             {shop?.planExpiresAt
               ? ` — ${shop.planExpiresAt.toLocaleDateString("uz-UZ")} gacha`
               : ""}
           </CardDescription>
+          <CardDescription>
+            Mijozlar: {customerCount} /{" "}
+            {customerLimit === Infinity ? "cheksiz" : customerLimit}
+          </CardDescription>
         </CardHeader>
+        {isNearLimit ? (
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Mijozlar chegarasiga yaqinlashyapsiz.{" "}
+              <Link href="/pricing" className="font-medium underline">
+                Tarifni oshiring
+              </Link>
+              .
+            </p>
+          </CardContent>
+        ) : null}
       </Card>
     </div>
   );

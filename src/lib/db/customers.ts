@@ -46,6 +46,10 @@ export function createCustomer(shopId: string, data: CreateCustomerInput) {
   });
 }
 
+export function countCustomers(shopId: string) {
+  return prisma.customer.count({ where: { shopId } });
+}
+
 export async function updateCustomer(
   shopId: string,
   id: string,
