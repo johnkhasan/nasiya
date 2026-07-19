@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TopDebtorsChart } from "@/components/top-debtors-chart";
+import { StaffFormDialog } from "../settings/staff-form-dialog";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -40,11 +41,14 @@ export default async function DashboardPage() {
             Xush kelibsiz, {session?.user.name}
           </p>
         </div>
-        <Button
-          variant="outline"
-          nativeButton={false}
-          render={<a href="/api/reports/debts">Excel yuklab olish</a>}
-        />
+        <div className="flex items-center gap-2">
+          {session?.user.role === "owner" ? <StaffFormDialog /> : null}
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<a href="/api/reports/debts">Excel yuklab olish</a>}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
