@@ -1,0 +1,76 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nasiya
+      POSTGRES_USER: nasiya
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No ports exposed — only reachable from other containers on this network.
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nasiya -d nasiya"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off: `docker compose run --rm migrate` after pulling a new app
+  # image, before restarting `app`. Never started by `docker compose up`.
+  migrate:
+    image: ghcr.io/${GHCR_OWNER}/nasiya-migrate:latest
+    environment:
+      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@db:5432/nasiya
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+    profiles: ["tools"]
+
+  app:
+    image: ghcr.io/${GHCR_OWNER}/nasiya-app:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@db:5432/nasiya
+      AUTH_URL: https://app.${DOMAIN}
+      AUTH_SECRET: ${AUTH_SECRET}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot
+    depends_on: [app]
+    networks: [internal]
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h; done'"
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    ports: ["127.0.0.1:3001:3001"] # SSH tunnel only
+    volumes:
+      - kuma-data:/app/data
+
+volumes:
+  pgdata:
+  certbot-etc:
+  certbot-www:
+  kuma-data:
+
+networks:
+  internal:
