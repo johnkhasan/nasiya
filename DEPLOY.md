@@ -32,11 +32,14 @@ IP before continuing.
 
 ## 1. Checkout the repo on the server
 
+Pick any directory the `deploy` user can read/write and that matches
+`.github/workflows/deploy.yml`'s `cd` target (currently `/srv/nasiya`) —
+adjust one or the other if you use a different path.
+
 ```bash
-su - deploy
-git clone https://github.com/johnkhasan/nasiya.git
-cd nasiya
-cp .env.production.example .env
+git clone https://github.com/johnkhasan/nasiya.git /srv/nasiya
+chown -R deploy:deploy /srv/nasiya
+su - deploy -c "cd /srv/nasiya && cp .env.production.example .env"
 # edit .env: DB_PASSWORD, AUTH_URL (full https:// URL), AUTH_SECRET
 # (openssl rand -base64 32), GHCR_OWNER
 ```
@@ -64,6 +67,22 @@ server block, run `certbot certonly --webroot` for your subdomain, point a
 new `server { listen 443 ssl; server_name your.subdomain; }` block at
 `http://nasiya-app-1:3000`, and recreate that nginx container so it can
 resolve the new network. Then skip to step 4.
+
+Two gotchas hit while first setting this up (already fixed in this repo's
+`docker-compose.yml`, but worth knowing if something similar resurfaces):
+- If the other project *also* has a service literally named `db`, its
+  nginx-adjacent containers on the shared network can resolve the plain
+  `db` alias to the WRONG Postgres once `app` joins that network too —
+  Prisma reports it as "password authentication failed" even though the
+  credentials are fine, since it's just talking to a different database
+  entirely. Fixed by giving nasiya's db an explicit unique
+  `container_name` and referencing that name, not `db`, in `DATABASE_URL`.
+- Next.js standalone's `server.js` binds to `process.env.HOSTNAME` if
+  set, and Docker sets `HOSTNAME` to the container ID for every
+  container by default — normally harmless, but with `app` on two
+  networks that ID resolved to only one of them, so the other network's
+  nginx got connection-refused even though the app was clearly running.
+  Fixed by forcing `HOSTNAME=0.0.0.0` in `app`'s environment.
 
 ## 2. Authenticate the server to pull from GHCR
 

@@ -51,7 +51,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             export GHCR_OWNER=${{ github.repository_owner }}
-            cd /home/deploy/nasiya
+            cd /srv/nasiya
             docker compose pull app migrate worker
             docker compose run --rm migrate
             docker compose up -d app worker

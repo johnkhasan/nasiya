@@ -1,6 +1,15 @@
 services:
   db:
     image: postgres:16-alpine
+    # Explicit, project-unique name — the plain "db" alias Compose also
+    # gives this container collides with any OTHER project's own "db"
+    # service if `app` ever joins that project's network too (see
+    # docker-compose.override.yml): Docker's embedded DNS resolved "db"
+    # to a *different* Postgres entirely once nasiya-app-1 had both
+    # networks attached, and it authenticated against the wrong database
+    # with the right-looking error ("password authentication failed") —
+    # confusing to debug since the credentials genuinely were correct.
+    container_name: nasiya-db-1
     restart: unless-stopped
     environment:
       POSTGRES_DB: nasiya
@@ -21,7 +30,7 @@ services:
   migrate:
     image: ghcr.io/${GHCR_OWNER}/nasiya-migrate:latest
     environment:
-      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@db:5432/nasiya
+      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@nasiya-db-1:5432/nasiya
     depends_on:
       db:
         condition: service_healthy
@@ -32,11 +41,20 @@ services:
     image: ghcr.io/${GHCR_OWNER}/nasiya-app:latest
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@db:5432/nasiya
+      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@nasiya-db-1:5432/nasiya
       AUTH_URL: ${AUTH_URL}
       AUTH_SECRET: ${AUTH_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      # Next.js standalone's server.js does
+      # `process.env.HOSTNAME || '0.0.0.0'` for its bind address, and
+      # Docker sets HOSTNAME to the container ID for every container by
+      # default. Normally harmless (that ID still resolves to the
+      # container's one network), but with `app` on two networks (see
+      # docker-compose.override.yml) it resolved to only one of them —
+      # nginx on the other network got connection-refused even though
+      # the app was up. Force the real default back.
+      HOSTNAME: "0.0.0.0"
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +64,7 @@ services:
     image: ghcr.io/${GHCR_OWNER}/nasiya-worker:latest
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@db:5432/nasiya
+      DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@nasiya-db-1:5432/nasiya
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     depends_on:
       db:
