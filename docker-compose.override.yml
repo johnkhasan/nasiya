@@ -1,0 +1,18 @@
+# Active by default (docker compose reads this alongside docker-compose.yml
+# automatically). For THIS deployment, another project's nginx already owns
+# ports 80/443 on the host — nasiya's own nginx/certbot stay under the
+# standalone-nginx profile (inactive), and `app` instead joins that other
+# project's Docker network so its nginx can reach nasiya-app-1 directly.
+#
+# Deploying to a dedicated server instead? Delete this file (or move it
+# aside) and run with `docker compose --profile standalone-nginx up -d`.
+services:
+  app:
+    networks:
+      - internal
+      - shared_ingress
+
+networks:
+  shared_ingress:
+    name: ${SHARED_INGRESS_NETWORK}
+    external: true

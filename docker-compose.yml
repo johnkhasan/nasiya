@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://nasiya:${DB_PASSWORD}@db:5432/nasiya
-      AUTH_URL: https://app.${DOMAIN}
+      AUTH_URL: ${AUTH_URL}
       AUTH_SECRET: ${AUTH_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
@@ -53,6 +53,11 @@ services:
         condition: service_healthy
     networks: [internal]
 
+  # Only started on a dedicated server with free 80/443
+  # (`docker compose --profile standalone-nginx up -d`). If this project
+  # shares a server with something that already owns those ports, see
+  # docker-compose.override.yml and DEPLOY.md § "Shared nginx" instead —
+  # these two services stay out of the way otherwise.
   nginx:
     image: nginx:alpine
     restart: unless-stopped
@@ -63,6 +68,7 @@ services:
       - certbot-www:/var/www/certbot
     depends_on: [app]
     networks: [internal]
+    profiles: ["standalone-nginx"]
 
   certbot:
     image: certbot/certbot
@@ -70,6 +76,7 @@ services:
       - certbot-etc:/etc/letsencrypt
       - certbot-www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h; done'"
+    profiles: ["standalone-nginx"]
 
   uptime-kuma:
     image: louislam/uptime-kuma:1

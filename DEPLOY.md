@@ -27,7 +27,8 @@ sudo usermod -aG docker deploy
 # copy your deploy SSH public key into ~deploy/.ssh/authorized_keys
 ```
 
-Point your domain's DNS A-record (`app.yourdomain.uz`) at the server's IP before continuing.
+Point your domain's DNS A-record (e.g. `app.yourdomain.uz`) at the server's
+IP before continuing.
 
 ## 1. Checkout the repo on the server
 
@@ -36,11 +37,33 @@ su - deploy
 git clone https://github.com/johnkhasan/nasiya.git
 cd nasiya
 cp .env.production.example .env
-# edit .env: DB_PASSWORD, DOMAIN, AUTH_SECRET (openssl rand -base64 32), GHCR_OWNER
+# edit .env: DB_PASSWORD, AUTH_URL (full https:// URL), AUTH_SECRET
+# (openssl rand -base64 32), GHCR_OWNER
 ```
 
-Replace `app.YOUR_DOMAIN` with your real domain in `docker/nginx.conf` and
-`docker/nginx.bootstrap.conf`.
+If this is a fresh, dedicated server, also replace `app.YOUR_DOMAIN` in
+`docker/nginx.conf` and `docker/nginx.bootstrap.conf` with your real domain,
+and skip straight to step 3 (standalone SSL bootstrap). If instead you're
+sharing a server with another project that already owns ports 80/443, read
+"Shared nginx" right below first — it replaces steps 2–3.
+
+### Shared nginx (another project already owns 80/443)
+
+`docker-compose.override.yml` is active by default and expects a
+`SHARED_INGRESS_NETWORK` value in `.env` — the other project's Docker
+Compose network name (`docker network ls`, usually `<projectdir>_default`).
+`nasiya`'s own `nginx`/`certbot` stay off (they're gated behind the
+`standalone-nginx` profile); `app` instead joins that network so the other
+project's nginx can reach it directly as `nasiya-app-1` (or whatever
+`docker compose ps` shows).
+
+You still need a cert for your subdomain and a route to it in the other
+project's nginx config — outside this repo since it's the other project's
+files. In short: add an ACME-challenge webroot location to its port-80
+server block, run `certbot certonly --webroot` for your subdomain, point a
+new `server { listen 443 ssl; server_name your.subdomain; }` block at
+`http://nasiya-app-1:3000`, and recreate that nginx container so it can
+resolve the new network. Then skip to step 4.
 
 ## 2. Authenticate the server to pull from GHCR
 
@@ -87,7 +110,7 @@ docker compose run --rm migrate
 docker compose up -d
 ```
 
-Visit `https://app.yourdomain.uz` — you should hit `/login`.
+Visit `https://<AUTH_URL host>` — you should hit `/login`.
 
 ## 5. GitHub Actions secrets
 
@@ -110,7 +133,7 @@ then SSHes in to run migrations and restart `app` + `worker` (see
 3. Register the webhook (one-time, replace both placeholders):
 
    ```bash
-   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://app.yourdomain.uz/api/webhooks/telegram"
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<AUTH_URL host>/api/webhooks/telegram"
    ```
 
    Optionally add `&secret_token=<random-string>` and set the same value as
@@ -139,4 +162,4 @@ against a throwaway database, not production.
 
 `http://<server-ip>:3001` is bound to localhost only — reach it via an SSH
 tunnel (`ssh -L 3001:localhost:3001 deploy@<server-ip>`) and add a monitor
-for `https://app.yourdomain.uz` with a Telegram notification.
+for `https://<AUTH_URL host>` with a Telegram notification.
