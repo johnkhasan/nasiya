@@ -4,11 +4,12 @@ import { AuthError } from "next-auth";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { registerShop } from "@/lib/db/shops";
+import { phoneSchema } from "@/lib/validation";
 
 const registerSchema = z.object({
   shopName: z.string().min(2, "Do'kon nomini kiriting"),
   ownerName: z.string().min(2, "F.I.Sh. kiriting"),
-  phone: z.string().min(9, "Telefon raqamni to'liq kiriting"),
+  phone: phoneSchema,
   password: z.string().min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
 });
 

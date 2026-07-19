@@ -9,10 +9,11 @@ import {
   updateCustomer,
 } from "@/lib/db/customers";
 import { requireSession } from "@/lib/session";
+import { phoneSchema } from "@/lib/validation";
 
 const customerSchema = z.object({
   fullName: z.string().min(2, "Ism kiriting"),
-  phone: z.string().min(9, "Telefon raqamni to'liq kiriting"),
+  phone: phoneSchema,
   note: z.string().optional(),
 });
 
@@ -77,12 +78,21 @@ export async function updateCustomerAction(
   return { success: true };
 }
 
-export async function deleteCustomerAction(id: string) {
-  const { shopId, userId } = await requireSession();
+export type DeleteCustomerState = { error?: string };
+
+export async function deleteCustomerAction(
+  id: string
+): Promise<DeleteCustomerState> {
+  const { shopId, userId, role } = await requireSession();
+  if (role !== "owner") {
+    return { error: "Faqat do'kon egasi mijozni o'chira oladi" };
+  }
+
   const deleted = await deleteCustomer(shopId, id);
   if (deleted) {
     await logAudit({ shopId, userId, action: "customer.delete", entityId: id });
   }
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
+  return {};
 }

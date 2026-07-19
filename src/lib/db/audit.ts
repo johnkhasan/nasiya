@@ -6,7 +6,9 @@ export type AuditAction =
   | "customer.update"
   | "customer.delete"
   | "debt.create"
-  | "payment.create";
+  | "payment.create"
+  | "staff.create"
+  | "staff.delete";
 
 export function logAudit(params: {
   shopId: string;

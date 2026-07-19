@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { deleteCustomerAction } from "./actions";
 
@@ -32,7 +33,11 @@ export function DeleteCustomerButton({
           return;
         }
         startTransition(async () => {
-          await deleteCustomerAction(customerId);
+          const result = await deleteCustomerAction(customerId);
+          if (result.error) {
+            toast.error(result.error);
+            return;
+          }
           if (redirectTo) {
             router.push(redirectTo);
           }

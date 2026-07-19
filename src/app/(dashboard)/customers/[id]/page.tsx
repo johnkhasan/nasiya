@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCustomerById } from "@/lib/db/customers";
 import { DEBT_STATUS } from "@/lib/db/debts";
-import { requireShopId } from "@/lib/session";
+import { requireSession, requireShopId } from "@/lib/session";
 import { formatDate, formatMoney } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +35,7 @@ export default async function CustomerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const shopId = await requireShopId();
+  const { shopId, role } = await requireSession();
   const customer = await getCustomerById(shopId, id);
 
   if (!customer) {
@@ -81,11 +81,13 @@ export default async function CustomerDetailPage({
               </Button>
             }
           />
-          <DeleteCustomerButton
-            customerId={customer.id}
-            customerName={customer.fullName}
-            redirectTo="/customers"
-          />
+          {role === "owner" ? (
+            <DeleteCustomerButton
+              customerId={customer.id}
+              customerName={customer.fullName}
+              redirectTo="/customers"
+            />
+          ) : null}
         </div>
       </div>
 

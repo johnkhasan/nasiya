@@ -8,6 +8,8 @@ const NAV_LINKS = [
   { href: "/customers", label: "Mijozlar" },
 ];
 
+const OWNER_NAV_LINKS = [{ href: "/settings", label: "Sozlamalar" }];
+
 export default async function DashboardLayout({
   children,
 }: Readonly<{
@@ -18,13 +20,18 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const links =
+    session.user.role === "owner"
+      ? [...NAV_LINKS, ...OWNER_NAV_LINKS]
+      : NAV_LINKS;
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6">
         <div className="flex items-center gap-6">
           <span className="font-semibold">Nasiya</span>
           <nav className="flex gap-4">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
