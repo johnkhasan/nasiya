@@ -23,10 +23,6 @@ export function StaffFormDialog() {
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
-    if (formData.get("password") !== formData.get("confirmPassword")) {
-      setError("Parollar mos emas");
-      return;
-    }
     startTransition(async () => {
       const result = await createStaffAction({}, formData);
       if (result.error) {
@@ -36,6 +32,18 @@ export function StaffFormDialog() {
       setError(undefined);
       setOpen(false);
     });
+  }
+
+  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+    const formData = new FormData(event.currentTarget);
+    if (formData.get("password") !== formData.get("confirmPassword")) {
+      // Block the submit before it reaches the form action, so the browser
+      // never sees a "submitted" password form to offer saving on mismatch.
+      event.preventDefault();
+      setError("Parollar mos emas");
+      return;
+    }
+    setError(undefined);
   }
 
   return (
@@ -55,7 +63,11 @@ export function StaffFormDialog() {
             hech narsani o&apos;chira olmaydi.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit} className="flex flex-col gap-4">
+        <form
+          action={handleSubmit}
+          onSubmit={handleFormSubmit}
+          className="flex flex-col gap-4"
+        >
           <div className="flex flex-col gap-2">
             <Label htmlFor="fullName">F.I.Sh.</Label>
             <Input id="fullName" name="fullName" required />

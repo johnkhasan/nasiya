@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,21 +19,26 @@ import { registerAction, type RegisterState } from "./actions";
 
 const initialState: RegisterState = {};
 
-async function registerActionWithConfirm(
-  prevState: RegisterState,
-  formData: FormData
-): Promise<RegisterState> {
-  if (formData.get("password") !== formData.get("confirmPassword")) {
-    return { error: "Parollar mos emas" };
-  }
-  return registerAction(prevState, formData);
-}
-
 export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(
-    registerActionWithConfirm,
+    registerAction,
     initialState
   );
+  const [mismatchError, setMismatchError] = useState<string | undefined>();
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    const formData = new FormData(event.currentTarget);
+    if (formData.get("password") !== formData.get("confirmPassword")) {
+      // Block the submit before it reaches the form action, so the browser
+      // never sees a "submitted" password form to offer saving on mismatch.
+      event.preventDefault();
+      setMismatchError("Parollar mos emas");
+      return;
+    }
+    setMismatchError(undefined);
+  }
+
+  const errorMessage = mismatchError ?? state.error;
 
   return (
     <Card className="w-full max-w-sm">
@@ -43,7 +48,7 @@ export function RegisterForm() {
           30 kunlik bepul sinov muddati bilan boshlang
         </CardDescription>
       </CardHeader>
-      <form action={formAction}>
+      <form action={formAction} onSubmit={handleSubmit}>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="shopName">Do&apos;kon nomi</Label>
@@ -65,8 +70,8 @@ export function RegisterForm() {
             <Label htmlFor="confirmPassword">Parolni tasdiqlang</Label>
             <PasswordInput id="confirmPassword" name="confirmPassword" required />
           </div>
-          {state.error ? (
-            <p className="text-sm text-destructive">{state.error}</p>
+          {errorMessage ? (
+            <p className="text-sm text-destructive">{errorMessage}</p>
           ) : null}
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
