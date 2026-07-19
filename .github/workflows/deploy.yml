@@ -35,6 +35,14 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/nasiya-migrate:latest
 
+      - name: Build & push worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.worker
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/nasiya-worker:latest
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -44,7 +52,7 @@ jobs:
           script: |
             export GHCR_OWNER=${{ github.repository_owner }}
             cd /home/deploy/nasiya
-            docker compose pull app migrate
+            docker compose pull app migrate worker
             docker compose run --rm migrate
-            docker compose up -d app
+            docker compose up -d app worker
             docker image prune -f

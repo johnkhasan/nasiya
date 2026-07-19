@@ -65,3 +65,20 @@ export async function deleteCustomer(shopId: string, id: string) {
   });
   return count > 0;
 }
+
+// Deliberately unscoped by shopId: the Telegram webhook has no shop
+// session — the customer id itself (an unguessable cuid, shared only via
+// the connect link a shop sends its own customer) is the capability here.
+export function getCustomerByIdUnscoped(id: string) {
+  return prisma.customer.findUnique({
+    where: { id },
+    include: { shop: { select: { name: true } } },
+  });
+}
+
+export function setCustomerTelegramChatId(id: string, telegramChatId: string) {
+  return prisma.customer.update({
+    where: { id },
+    data: { telegramChatId },
+  });
+}

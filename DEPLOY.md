@@ -97,11 +97,32 @@ In the repo's Settings → Secrets and variables → Actions, add:
 - `SSH_PRIVATE_KEY` — private key matching a public key in
   `~deploy/.ssh/authorized_keys` (a dedicated deploy key, not your personal one)
 
-After that, every push to `main` builds both images, pushes to GHCR, then
-SSHes in to run migrations and restart `app` (see
+After that, every push to `main` builds all three images, pushes to GHCR,
+then SSHes in to run migrations and restart `app` + `worker` (see
 `.github/workflows/deploy.yml`).
 
-## 6. Backups
+## 6. Telegram bot
+
+1. Talk to [@BotFather](https://t.me/BotFather), `/newbot`, get the token
+   and the bot's `@username`.
+2. Add to the server's `.env`: `TELEGRAM_BOT_TOKEN` and
+   `TELEGRAM_BOT_USERNAME` (no `@`), then `docker compose up -d app worker`.
+3. Register the webhook (one-time, replace both placeholders):
+
+   ```bash
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://app.yourdomain.uz/api/webhooks/telegram"
+   ```
+
+   Optionally add `&secret_token=<random-string>` and set the same value as
+   `TELEGRAM_WEBHOOK_SECRET` in `.env` — the webhook route checks it if
+   present.
+4. From a customer's page in the app, copy their connect link and open it
+   in Telegram, press Start — their `telegramChatId` gets saved and they'll
+   receive reminders. `worker` checks daily (default 09:00, configurable via
+   `REMINDER_CRON_SCHEDULE`) for debts due tomorrow or overdue and messages
+   any customer who has connected, at most once per day per debt.
+
+## 7. Backups
 
 ```bash
 mkdir -p /home/deploy/backups
@@ -114,7 +135,7 @@ crontab -e
 Test a restore at least once — `zcat backup.sql.gz | docker compose exec -T db psql -U nasiya nasiya`
 against a throwaway database, not production.
 
-## 7. Uptime Kuma
+## 8. Uptime Kuma
 
 `http://<server-ip>:3001` is bound to localhost only — reach it via an SSH
 tunnel (`ssh -L 3001:localhost:3001 deploy@<server-ip>`) and add a monitor

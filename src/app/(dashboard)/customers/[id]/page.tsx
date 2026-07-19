@@ -11,8 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import { DebtStatusBadge } from "@/components/debt-status-badge";
 import { CustomerFormDialog } from "../customer-form-dialog";
 import { DeleteCustomerButton } from "../delete-customer-button";
+import { getTelegramConnectLink } from "@/lib/telegram";
 import { DebtFormDialog } from "./debt-form-dialog";
 import { PaymentFormDialog } from "./payment-form-dialog";
+import { TelegramConnect } from "./telegram-connect";
 
 export async function generateMetadata({
   params,
@@ -58,6 +60,12 @@ export default async function CustomerDetailPage({
           {customer.note ? (
             <p className="mt-1 text-sm text-muted-foreground">{customer.note}</p>
           ) : null}
+          <div className="mt-2">
+            <TelegramConnect
+              connected={!!customer.telegramChatId}
+              link={getTelegramConnectLink(customer.id)}
+            />
+          </div>
         </div>
         <div className="flex gap-2">
           <CustomerFormDialog
