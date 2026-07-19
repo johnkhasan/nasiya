@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,32 +33,49 @@ export default function PricingPage() {
         </div>
 
         <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
-          {PRICING_TIERS.map((tier) => (
-            <Card key={tier.plan} className="flex flex-col">
-              <CardHeader>
-                <CardTitle>{tier.name}</CardTitle>
-                <CardDescription>{tier.customerLimit}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col gap-3">
-                <p className="text-2xl font-semibold">
-                  {tier.price === 0 ? "Bepul" : `${formatMoney(tier.price)}/oy`}
-                </p>
-                <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-                  {tier.features.map((feature) => (
-                    <li key={feature}>· {feature}</li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full"
-                  variant={tier.plan === "basic" ? "default" : "outline"}
-                  nativeButton={false}
-                  render={<Link href="/register">Boshlash</Link>}
-                />
-              </CardFooter>
-            </Card>
-          ))}
+          {PRICING_TIERS.map((tier) => {
+            const isRecommended = tier.plan === "basic";
+            return (
+              <Card
+                key={tier.plan}
+                className={
+                  isRecommended
+                    ? "flex flex-col border-primary shadow-md shadow-primary/10 ring-1 ring-primary"
+                    : "flex flex-col"
+                }
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle>{tier.name}</CardTitle>
+                    {isRecommended ? (
+                      <Badge>Tavsiya etiladi</Badge>
+                    ) : null}
+                  </div>
+                  <CardDescription>{tier.customerLimit}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col gap-3">
+                  <p className="text-2xl font-semibold">
+                    {tier.price === 0
+                      ? "Bepul"
+                      : `${formatMoney(tier.price)}/oy`}
+                  </p>
+                  <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+                    {tier.features.map((feature) => (
+                      <li key={feature}>· {feature}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-full"
+                    variant={isRecommended ? "default" : "outline"}
+                    nativeButton={false}
+                    render={<Link href="/register">Boshlash</Link>}
+                  />
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
 
         <p className="mt-8 text-sm text-muted-foreground">

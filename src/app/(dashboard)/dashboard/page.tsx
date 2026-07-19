@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertTriangle, Banknote, FileClock, Wallet } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { countCustomers } from "@/lib/db/customers";
 import { getDashboardStats } from "@/lib/db/dashboard";
@@ -49,6 +50,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
+            <div className="mb-1 flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Wallet className="size-4" />
+            </div>
             <CardDescription>Jami qarzdorlik</CardDescription>
             <CardTitle className="text-2xl">
               {formatMoney(stats?.totalOutstanding ?? 0)}
@@ -57,6 +61,9 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
+            <div className="mb-1 flex size-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <AlertTriangle className="size-4" />
+            </div>
             <CardDescription>Muddati o&apos;tgan</CardDescription>
             <CardTitle className="text-2xl">
               {formatMoney(stats?.overdueAmount ?? 0)}
@@ -66,6 +73,9 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
+            <div className="mb-1 flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Banknote className="size-4" />
+            </div>
             <CardDescription>Bugungi to&apos;lovlar</CardDescription>
             <CardTitle className="text-2xl">
               {formatMoney(stats?.todayPaymentsTotal ?? 0)}
@@ -77,6 +87,9 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
+            <div className="mb-1 flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <FileClock className="size-4" />
+            </div>
             <CardDescription>Ochiq qarzlar soni</CardDescription>
             <CardTitle className="text-2xl">
               {stats?.openDebtCount ?? 0}
