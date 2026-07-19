@@ -45,7 +45,7 @@ export async function createStaffAction(
     entityId: staff.id,
   });
 
-  revalidatePath("/settings");
+  revalidatePath("/staff");
   return { success: true };
 }
 
@@ -65,6 +65,6 @@ export async function deleteStaffAction(
     action: "staff.delete",
     entityId: staffUserId,
   });
-  revalidatePath("/settings");
+  revalidatePath("/staff");
   return {};
 }

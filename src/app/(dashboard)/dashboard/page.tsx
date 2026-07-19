@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TopDebtorsChart } from "@/components/top-debtors-chart";
-import { StaffFormDialog } from "../settings/staff-form-dialog";
+import { StaffFormDialog } from "../staff/staff-form-dialog";
 
 export default async function DashboardPage() {
   const session = await auth();

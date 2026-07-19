@@ -17,7 +17,7 @@ const ROLE_LABELS: Record<string, string> = {
   staff: "Xodim",
 };
 
-export default async function SettingsPage() {
+export default async function StaffPage() {
   const { shopId, role } = await requireSession();
   if (role !== "owner") {
     redirect("/dashboard");

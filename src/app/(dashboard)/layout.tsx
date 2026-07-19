@@ -8,7 +8,7 @@ const NAV_LINKS = [
   { href: "/customers", label: "Mijozlar" },
 ];
 
-const OWNER_NAV_LINKS = [{ href: "/settings", label: "Xodimlar" }];
+const OWNER_NAV_LINKS = [{ href: "/staff", label: "Xodimlar" }];
 
 export default async function DashboardLayout({
   children,
