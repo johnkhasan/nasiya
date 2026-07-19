@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { PhoneInput } from "@/components/phone-input";
 import { createStaffAction } from "./actions";
 
@@ -22,6 +23,10 @@ export function StaffFormDialog() {
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
+    if (formData.get("password") !== formData.get("confirmPassword")) {
+      setError("Parollar mos emas");
+      return;
+    }
     startTransition(async () => {
       const result = await createStaffAction({}, formData);
       if (result.error) {
@@ -61,7 +66,11 @@ export function StaffFormDialog() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Parol</Label>
-            <Input id="password" name="password" type="password" required />
+            <PasswordInput id="password" name="password" required />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="confirmPassword">Parolni tasdiqlang</Label>
+            <PasswordInput id="confirmPassword" name="confirmPassword" required />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>

@@ -13,14 +13,25 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { PhoneInput } from "@/components/phone-input";
 import { registerAction, type RegisterState } from "./actions";
 
 const initialState: RegisterState = {};
 
+async function registerActionWithConfirm(
+  prevState: RegisterState,
+  formData: FormData
+): Promise<RegisterState> {
+  if (formData.get("password") !== formData.get("confirmPassword")) {
+    return { error: "Parollar mos emas" };
+  }
+  return registerAction(prevState, formData);
+}
+
 export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(
-    registerAction,
+    registerActionWithConfirm,
     initialState
   );
 
@@ -48,7 +59,11 @@ export function RegisterForm() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Parol</Label>
-            <Input id="password" name="password" type="password" required />
+            <PasswordInput id="password" name="password" required />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="confirmPassword">Parolni tasdiqlang</Label>
+            <PasswordInput id="confirmPassword" name="confirmPassword" required />
           </div>
           {state.error ? (
             <p className="text-sm text-destructive">{state.error}</p>
