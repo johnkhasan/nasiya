@@ -1,10 +1,14 @@
 import "server-only";
 import { auth } from "@/lib/auth";
 
-export async function requireShopId() {
+export async function requireSession() {
   const session = await auth();
-  if (!session?.user?.shopId) {
+  if (!session?.user?.shopId || !session.user.id) {
     throw new Error("Unauthorized");
   }
-  return session.user.shopId;
+  return { shopId: session.user.shopId, userId: session.user.id };
+}
+
+export async function requireShopId() {
+  return (await requireSession()).shopId;
 }

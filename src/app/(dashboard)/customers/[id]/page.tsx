@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCustomerById } from "@/lib/db/customers";
+import { DEBT_STATUS } from "@/lib/db/debts";
 import { requireShopId } from "@/lib/session";
 import { formatDate, formatMoney } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { DebtStatusBadge } from "@/components/debt-status-badge";
 import { CustomerFormDialog } from "../customer-form-dialog";
 import { DeleteCustomerButton } from "../delete-customer-button";
 import { DebtFormDialog } from "./debt-form-dialog";
+import { PaymentFormDialog } from "./payment-form-dialog";
 
 export async function generateMetadata({
   params,
@@ -101,51 +103,61 @@ export default async function CustomerDetailPage({
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {customer.debts.map((debt) => (
-            <Card key={debt.id}>
-              <CardContent className="flex flex-col gap-3 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{formatMoney(debt.amount)}</p>
-                    {debt.description ? (
-                      <p className="text-sm text-muted-foreground">
-                        {debt.description}
-                      </p>
-                    ) : null}
-                  </div>
-                  <DebtStatusBadge status={debt.status} />
-                </div>
-                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                  <span>To&apos;langan: {formatMoney(debt.paidAmount)}</span>
-                  <span>
-                    Qoldiq:{" "}
-                    {formatMoney(Number(debt.amount) - Number(debt.paidAmount))}
-                  </span>
-                  {debt.dueDate ? (
-                    <span>Muddat: {formatDate(debt.dueDate)}</span>
-                  ) : null}
-                  <span>Sana: {formatDate(debt.createdAt)}</span>
-                </div>
-                {debt.payments.length > 0 ? (
-                  <>
-                    <Separator />
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium">To&apos;lovlar tarixi</p>
-                      {debt.payments.map((payment) => (
-                        <div
-                          key={payment.id}
-                          className="flex justify-between text-sm text-muted-foreground"
-                        >
-                          <span>{formatDate(payment.paidAt)}</span>
-                          <span>{formatMoney(payment.amount)}</span>
-                        </div>
-                      ))}
+          {customer.debts.map((debt) => {
+            const remaining = Number(debt.amount) - Number(debt.paidAmount);
+
+            return (
+              <Card key={debt.id}>
+                <CardContent className="flex flex-col gap-3 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{formatMoney(debt.amount)}</p>
+                      {debt.description ? (
+                        <p className="text-sm text-muted-foreground">
+                          {debt.description}
+                        </p>
+                      ) : null}
                     </div>
-                  </>
-                ) : null}
-              </CardContent>
-            </Card>
-          ))}
+                    <DebtStatusBadge status={debt.status} />
+                  </div>
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                    <span>To&apos;langan: {formatMoney(debt.paidAmount)}</span>
+                    <span>Qoldiq: {formatMoney(remaining)}</span>
+                    {debt.dueDate ? (
+                      <span>Muddat: {formatDate(debt.dueDate)}</span>
+                    ) : null}
+                    <span>Sana: {formatDate(debt.createdAt)}</span>
+                  </div>
+                  {debt.status !== DEBT_STATUS.PAID ? (
+                    <div>
+                      <PaymentFormDialog
+                        customerId={customer.id}
+                        debtId={debt.id}
+                        remaining={remaining}
+                      />
+                    </div>
+                  ) : null}
+                  {debt.payments.length > 0 ? (
+                    <>
+                      <Separator />
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm font-medium">To&apos;lovlar tarixi</p>
+                        {debt.payments.map((payment) => (
+                          <div
+                            key={payment.id}
+                            className="flex justify-between text-sm text-muted-foreground"
+                          >
+                            <span>{formatDate(payment.paidAt)}</span>
+                            <span>{formatMoney(payment.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

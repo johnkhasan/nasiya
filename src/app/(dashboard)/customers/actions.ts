@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { logAudit } from "@/lib/db/audit";
 import {
   createCustomer,
   deleteCustomer,
   updateCustomer,
 } from "@/lib/db/customers";
-import { requireShopId } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 
 const customerSchema = z.object({
   fullName: z.string().min(2, "Ism kiriting"),
@@ -29,14 +30,21 @@ export async function createCustomerAction(
   _prevState: CustomerFormState,
   formData: FormData
 ): Promise<CustomerFormState> {
-  const shopId = await requireShopId();
+  const { shopId, userId } = await requireSession();
 
   const parsed = parseCustomerForm(formData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ma'lumotlarni tekshiring" };
   }
 
-  await createCustomer(shopId, parsed.data);
+  const customer = await createCustomer(shopId, parsed.data);
+  await logAudit({
+    shopId,
+    userId,
+    action: "customer.create",
+    entityId: customer.id,
+  });
+
   revalidatePath("/customers");
   return { success: true };
 }
@@ -46,7 +54,7 @@ export async function updateCustomerAction(
   _prevState: CustomerFormState,
   formData: FormData
 ): Promise<CustomerFormState> {
-  const shopId = await requireShopId();
+  const { shopId, userId } = await requireSession();
 
   const parsed = parseCustomerForm(formData);
   if (!parsed.success) {
@@ -57,6 +65,12 @@ export async function updateCustomerAction(
   if (!updated) {
     return { error: "Mijoz topilmadi" };
   }
+  await logAudit({
+    shopId,
+    userId,
+    action: "customer.update",
+    entityId: id,
+  });
 
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
@@ -64,8 +78,11 @@ export async function updateCustomerAction(
 }
 
 export async function deleteCustomerAction(id: string) {
-  const shopId = await requireShopId();
-  await deleteCustomer(shopId, id);
+  const { shopId, userId } = await requireSession();
+  const deleted = await deleteCustomer(shopId, id);
+  if (deleted) {
+    await logAudit({ shopId, userId, action: "customer.delete", entityId: id });
+  }
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
 }

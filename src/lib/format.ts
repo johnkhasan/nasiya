@@ -1,6 +1,10 @@
 export function formatMoney(value: { toString(): string } | number | string): string {
   const num = Number(typeof value === "object" ? value.toString() : value);
-  return `${new Intl.NumberFormat("uz-UZ").format(num)} so'm`;
+  // "en-US" grouping is identically implemented in every JS engine (unlike
+  // "uz-UZ", whose separator differs between Node's and browsers' bundled
+  // ICU data) — reuse its comma grouping and swap in the Uzbek space.
+  const grouped = new Intl.NumberFormat("en-US").format(num).replace(/,/g, " ");
+  return `${grouped} so'm`;
 }
 
 export function formatDate(value: Date | string): string {
