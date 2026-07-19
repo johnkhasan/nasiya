@@ -1,9 +1,10 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
-import { registerShop } from "@/lib/db/shops";
+import { PhoneAlreadyRegisteredError, registerShop } from "@/lib/db/shops";
 import { phoneSchema } from "@/lib/validation";
 
 const registerSchema = z.object({
@@ -33,6 +34,11 @@ export async function registerAction(
   try {
     await registerShop(parsed.data);
   } catch (error) {
+    if (error instanceof PhoneAlreadyRegisteredError) {
+      redirect(
+        `/login?notice=exists&phone=${encodeURIComponent(parsed.data.phone)}`
+      );
+    }
     return {
       error: error instanceof Error ? error.message : "Ro'yxatdan o'tishda xatolik yuz berdi",
     };

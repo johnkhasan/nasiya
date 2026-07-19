@@ -11,12 +11,18 @@ export type RegisterShopInput = {
   password: string;
 };
 
+export class PhoneAlreadyRegisteredError extends Error {
+  constructor() {
+    super("Bu telefon raqam bilan foydalanuvchi allaqachon ro'yxatdan o'tgan");
+  }
+}
+
 export async function registerShop(input: RegisterShopInput) {
   const existing = await prisma.user.findUnique({
     where: { phone: input.phone },
   });
   if (existing) {
-    throw new Error("Bu telefon raqam bilan foydalanuvchi allaqachon ro'yxatdan o'tgan");
+    throw new PhoneAlreadyRegisteredError();
   }
 
   const passwordHash = await bcrypt.hash(input.password, PASSWORD_SALT_ROUNDS);

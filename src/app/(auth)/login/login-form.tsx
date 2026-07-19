@@ -18,7 +18,12 @@ import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
 
-export function LoginForm() {
+type LoginFormProps = {
+  notice?: "exists";
+  defaultPhone?: string;
+};
+
+export function LoginForm({ notice, defaultPhone }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
 
   return (
@@ -29,9 +34,20 @@ export function LoginForm() {
       </CardHeader>
       <form action={formAction}>
         <CardContent className="flex flex-col gap-4">
+          {notice === "exists" ? (
+            <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+              Bu telefon raqam bilan foydalanuvchi allaqachon ro&apos;yxatdan
+              o&apos;tgan. Iltimos, tizimga kiring.
+            </p>
+          ) : null}
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Telefon raqam</Label>
-            <PhoneInput id="phone" name="phone" required />
+            <PhoneInput
+              id="phone"
+              name="phone"
+              defaultValue={defaultPhone}
+              required
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Parol</Label>

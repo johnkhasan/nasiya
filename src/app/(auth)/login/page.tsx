@@ -5,6 +5,17 @@ export const metadata: Metadata = {
   title: "Kirish — Nasiya",
 };
 
-export default function LoginPage() {
-  return <LoginForm />;
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string; phone?: string }>;
+}) {
+  const { notice, phone } = await searchParams;
+
+  return (
+    <LoginForm
+      notice={notice === "exists" ? "exists" : undefined}
+      defaultPhone={phone}
+    />
+  );
 }
