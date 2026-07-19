@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Shop {
+  id            String    @id @default(cuid())
+  name          String
+  phone         String
+  ownerName     String
+  plan          String    @default("trial") // trial, basic, pro
+  planExpiresAt DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  users     User[]
+  customers Customer[]
+  debts     Debt[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  phone     String   @unique // login telefon raqam orqali — do'konchilar uchun tabiiyroq
+  password  String
+  fullName  String
+  role      String   @default("owner") // owner, staff
+  createdAt DateTime @default(now())
+
+  @@index([shopId])
+}
+
+model Customer {
+  id             String   @id @default(cuid())
+  shopId         String
+  shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  fullName       String
+  phone          String
+  telegramChatId String?
+  note           String?
+  createdAt      DateTime @default(now())
+
+  debts Debt[]
+
+  @@index([shopId])
+  @@index([shopId, phone])
+}
+
+model Debt {
+  id          String    @id @default(cuid())
+  shopId      String
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount      Decimal   @db.Decimal(14, 2)
+  paidAmount  Decimal   @default(0) @db.Decimal(14, 2) // denormalizatsiya — tez hisoblash uchun
+  description String?
+  dueDate     DateTime?
+  status      String    @default("open") // open, partially_paid, paid
+  createdAt   DateTime  @default(now())
+
+  payments  Payment[]
+  reminders ReminderLog[]
+
+  @@index([shopId, status])
+  @@index([shopId, dueDate])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  debtId    String
+  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(14, 2)
+  method    String   @default("cash") // cash | payme | click (keyinroq)
+  note      String?
+  paidAt    DateTime @default(now())
+  createdBy String? // user id — kim qabul qildi
+
+  @@index([debtId])
+}
+
+model ReminderLog {
+  id      String   @id @default(cuid())
+  debtId  String
+  debt    Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  channel String // telegram, sms
+  status  String // sent, failed
+  sentAt  DateTime @default(now())
+
+  @@index([debtId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  shopId    String
+  userId    String
+  action    String // debt.create, payment.create, customer.delete ...
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([shopId, createdAt])
+}
