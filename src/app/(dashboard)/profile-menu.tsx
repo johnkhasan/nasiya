@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +27,15 @@ type ProfileMenuProps = {
   onSignOut: () => Promise<void>;
 };
 
+function getInitials(fullName: string): string {
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  const initials = words
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+  return initials || "?";
+}
+
 export function ProfileMenu({
   fullName,
   phone,
@@ -41,9 +50,12 @@ export function ProfileMenu({
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger
           render={
-            <Button variant="outline" size="sm">
-              <User />
-              Profil
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-primary text-xs font-semibold text-primary-foreground hover:bg-primary/90 aria-expanded:bg-primary/90 aria-expanded:text-primary-foreground"
+            >
+              {getInitials(fullName)}
             </Button>
           }
         />
