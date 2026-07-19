@@ -9,7 +9,7 @@ import { StaffFormDialog } from "./staff-form-dialog";
 import { DeleteStaffButton } from "./delete-staff-button";
 
 export const metadata: Metadata = {
-  title: "Sozlamalar — Nasiya",
+  title: "Xodimlar — Nasiya",
 };
 
 const ROLE_LABELS: Record<string, string> = {
