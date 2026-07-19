@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { DashboardNav } from "./dashboard-nav";
+import { ProfileMenu } from "./profile-menu";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Bosh sahifa" },
@@ -30,23 +30,24 @@ export default async function DashboardLayout({
     await signOut({ redirectTo: "/login" });
   }
 
+  const profileMenu = (
+    <ProfileMenu
+      fullName={session.user.name ?? ""}
+      phone={session.user.phone}
+      role={session.user.role}
+      onSignOut={handleSignOut}
+    />
+  );
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6">
         <div className="flex items-center justify-between gap-4">
           <span className="font-semibold">Nasiya</span>
-          <form action={handleSignOut} className="sm:hidden">
-            <Button variant="outline" size="sm" type="submit">
-              Chiqish
-            </Button>
-          </form>
+          <div className="sm:hidden">{profileMenu}</div>
         </div>
         <DashboardNav links={links} />
-        <form action={handleSignOut} className="hidden sm:ml-auto sm:block">
-          <Button variant="outline" size="sm" type="submit">
-            Chiqish
-          </Button>
-        </form>
+        <div className="hidden sm:ml-auto sm:block">{profileMenu}</div>
       </header>
       <main className="flex-1 px-4 py-6 sm:px-6">{children}</main>
     </div>

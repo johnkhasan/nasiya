@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { listUsersByShop } from "@/lib/db/users";
 import { formatDate } from "@/lib/format";
+import { ROLE_LABELS } from "@/lib/roles";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { StaffFormDialog } from "./staff-form-dialog";
@@ -10,11 +11,6 @@ import { DeleteStaffButton } from "./delete-staff-button";
 
 export const metadata: Metadata = {
   title: "Xodimlar — Nasiya",
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: "Do'kon egasi",
-  staff: "Xodim",
 };
 
 export default async function StaffPage() {

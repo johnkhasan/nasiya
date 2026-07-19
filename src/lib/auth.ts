@@ -33,6 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.fullName,
           shopId: user.shopId,
           role: user.role,
+          phone: user.phone,
         };
       },
     }),

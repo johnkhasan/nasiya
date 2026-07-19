@@ -12,6 +12,7 @@ export const authConfig = {
       if (user) {
         token.shopId = user.shopId;
         token.role = user.role;
+        token.phone = user.phone;
       }
       return token;
     },
@@ -20,6 +21,7 @@ export const authConfig = {
         session.user.id = (token.sub as string | undefined) ?? "";
         session.user.shopId = (token.shopId as string | undefined) ?? "";
         session.user.role = (token.role as string | undefined) ?? "owner";
+        session.user.phone = (token.phone as string | undefined) ?? "";
       }
       return session;
     },
