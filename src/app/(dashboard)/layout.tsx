@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { DashboardNav } from "./dashboard-nav";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Bosh sahifa" },
@@ -30,17 +30,7 @@ export default async function DashboardLayout({
       <header className="flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6">
         <div className="flex items-center gap-6">
           <span className="font-semibold">Nasiya</span>
-          <nav className="flex gap-4">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <DashboardNav links={links} />
         </div>
         <form
           action={async () => {
