@@ -25,19 +25,24 @@ export default async function DashboardLayout({
       ? [...NAV_LINKS, ...OWNER_NAV_LINKS]
       : NAV_LINKS;
 
+  async function handleSignOut() {
+    "use server";
+    await signOut({ redirectTo: "/login" });
+  }
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex items-center justify-between gap-4 border-b px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-6">
+      <header className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6">
+        <div className="flex items-center justify-between gap-4">
           <span className="font-semibold">Nasiya</span>
-          <DashboardNav links={links} />
+          <form action={handleSignOut} className="sm:hidden">
+            <Button variant="outline" size="sm" type="submit">
+              Chiqish
+            </Button>
+          </form>
         </div>
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/login" });
-          }}
-        >
+        <DashboardNav links={links} />
+        <form action={handleSignOut} className="hidden sm:ml-auto sm:block">
           <Button variant="outline" size="sm" type="submit">
             Chiqish
           </Button>
