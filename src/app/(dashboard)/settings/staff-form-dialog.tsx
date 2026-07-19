@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/phone-input";
 import { createStaffAction } from "./actions";
 
 export function StaffFormDialog() {
@@ -56,13 +57,7 @@ export function StaffFormDialog() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Telefon raqam</Label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              placeholder="+998901234567"
-              required
-            />
+            <PhoneInput id="phone" name="phone" required />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Parol</Label>

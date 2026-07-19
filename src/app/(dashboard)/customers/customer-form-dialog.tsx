@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { createCustomerAction, updateCustomerAction } from "./actions";
 
@@ -89,11 +90,9 @@ export function CustomerFormDialog({
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Telefon raqam</Label>
-            <Input
+            <PhoneInput
               id="phone"
               name="phone"
-              type="tel"
-              placeholder="+998901234567"
               defaultValue={formValues?.phone}
               required
             />
